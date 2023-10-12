@@ -1,0 +1,230 @@
+---
+title: "Final Stat 5311"
+author: "Arkaprava Hajra"
+date: "2023-05-10"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+### Problem 1 : Consider the mtcars data data from the CCA package
+
+#### i. Determine appropriate number of significant canonical dimensions or pairs. Interpret first two loadings for the driver feature.
+
+```{r }
+library(dbplyr)
+library(CCA)
+library(CCP)
+data("mtcars")
+head(mtcars)
+summary(mtcars)
+user <- c(2,3,5,8,10,11)
+driver <- c(1,4,6,7,9)
+mtcars[1,user]
+mtcars[1, driver]
+
+```
+
+From below,The correlation of the first canonical pair is 0.985 and second canonical pair is 0.84715~0.85 which indicates a high correlation between these canonical score pairs. There are a total of 5 pairs.
+
+
+```{r}
+cca = cancor(mtcars[,user],mtcars[,driver])
+cca$cor                                     # correlation between canonical pairs
+cca$cor[2] # correlation = 0.8471577
+
+```
+```{r}
+library(CCA)
+ccs <- cc(mtcars[ , user], mtcars[ , driver])
+usercc1  <- ccs$scores$xscores[ , 1]
+drivercc1 <- ccs$scores$yscores[ , 1]
+
+
+sdr <- sort(drivercc1)
+sdr <- sdr[c(1, length(sdr) - 1)] # first and next-to-last
+ext <- match(sdr, drivercc1)
+
+plot( drivercc1, usercc1, cex.lab = 1.5,
+      xlab = "User Feature canonical scores", 
+      ylab = "Driver Feature canonical scores",
+      pch = 16, cex = 1.5, col = "red", 
+      xlim = sdr * c(1.1, 1), frame.plot=FALSE)
+text(drivercc1[ext], usercc1[ext], 
+     labels = rownames(mtcars)[ext],
+     pos = c(1, 2), cex = .75, col = "blue")
+```
+The first canonical pair/scores plot shows that the first canonical pair correlation between the user variables and driver variables is very high (0.9850787). The Chrysler Imperial and Honda Civic are on opposite ends indicating that these two cars are very different and belong to two different groups of car with Chrysler Imperial being a luxury car whereas Honda Civic an economy car.
+
+```{r}
+usercc2  <- ccs$scores$xscores[ , 2]
+drivercc2  <- ccs$scores$yscores[ , 2]
+sdr2 <- sort(drivercc2)
+sdr2 <- sdr2[c(1, length(sdr2))] # first and next-to-last
+sdr2
+ext2 <- match(sdr2, drivercc2)
+ext2
+
+plot( usercc2, drivercc2, cex.lab = 1.5,
+      xlab = "User canonical scores", 
+      ylab = "Driver canonical scores",
+      pch = 16, cex = 1.5, col = "red", 
+      xlim = sdr2 * c(1.1, 1), frame.plot=FALSE)
+text(usercc2[ext2], drivercc2[ext2], 
+     labels = rownames(mtcars)[ext2],
+     pos = c(4, 2), cex = .75, col = "blue")
+```
+The above is for the second canonical pair. We can see a pattern of luxury cars like Merc 230 at top right while sports/exotic cars near the bottom left.
+
+#### ii. Using comput from CCA package appropriately for mtcars data. 
+
+PCA using correlation for driver for the features.
+```{r}
+pc <- princomp(mtcars,cor=TRUE);pc
+summary(pc)
+
+pc <- princomp(mtcars,cor=TRUE); pc
+
+L=pc$loadings; L
+apply(L^2, 2, sum)
+apply(L^2, 2, sum)/11
+
+screeplot(pc, col = "red", pch = 16,
+type = "lines", cex = 2, lwd = 2, main = "")
+
+biplot(pc, col = c(2, 1), cex = c(.55, 2),
+xlim = c( -.45, .45), xlab = "First PC", ylab = "Second PC")
+```
+
+The scree plot shown starts to form a straight line after the 3rd principal components suggesting that 3 PCAs are sufficient to explain the variability in the data. The first three PCs explain 89% of variance in data which is sufficient to reduce the 11-dimension dataset to 3 principal components.
+
+Looking at bi-plot, gear,am,drat are negatively correlated to qsec,vs.
+mpg and cyl are negatively correlated.
+Gear and AM are positively correlated. Hp and Carb are positively correlated
+
+
+
+#### 1. What is correlation between disp and first 'driver' canonical values?
+There is positive correlation b/w disp and first Driver. 
+
+
+#### 2. What is correlation between hp and 1st design canonical values?
+There is negative correlation b/w hp and first design.
+
+#### 3. What is correlation between first driver and second design canonical variate?
+here is positive correlation b/w first driver and second design. 
+
+```{r}
+require(ggplot2)
+require(GGally)
+library(CCA)
+
+summary(mtcars)
+xtabs(~disp, data = mtcars)
+ph <- mtcars[, 1:3]
+ad <- mtcars[, 4:8]
+
+ggpairs(ph)
+ggpairs(ad)
+matcor(ph, ad)
+cca <- cc(ph, ad)
+cca$cor
+cca[3:4]
+cca2 <- comput(ph, ad, cca)
+cca2[3:6]
+```
+
+
+
+### PROBLEM 2
+Given x = (x1,x2,x3)' with
+
+sigma = (7 0 0
+         0 2 1
+         0 1 2)
+         
+#### i. Calculate correlation matrix R
+
+```{r}
+mu = c(1,2,3);mu
+sigma <- matrix(c(7, 0, 0, 0, 2, 1, 0, 1, 2), nrow = 3, byrow = TRUE)
+sigma
+
+mvndat=mvrnorm(n = 10, mu, sigma)
+cor(sigma)
+```
+
+
+```{r}
+pc <- princomp(sigma)
+summary(pc)
+
+```
+
+Another method to calculate correlation matrix
+```{r}
+mu = c(1,2,3);mu
+sigma <- matrix(c(7, 0, 0, 0, 2, 1, 0, 1, 2), nrow = 3, byrow = TRUE)
+sigma
+
+# Calculate the correlation matrix
+R <- cov2cor(sigma)
+R
+```
+
+
+
+
+#### ii. Determine the variance of the second principal component(PC)
+
+By definition, the proportion of variance explained by the PCs are the eigen value for that PC divided by the sum of all eigen values. The variance using the built-in PCA function and the ratio of the respective eigen values to the total sum of all eigen values give the same results.
+
+
+```{r}
+var <- cor(sigma)
+var
+
+ei <- eigen(var)
+ei
+
+#variance explained by each PC
+((ei$values))/sum(ei$values)
+
+# Variance through PCA function
+summary(pc)
+```
+
+#### iii. Write down the formula for calculating the second PC
+
+check note.
+```{r}
+
+# Create the covariance matrix
+sigma <- matrix(c(7, 0, 0, 0, 2, 1, 0, 1, 2), nrow = 3, byrow = TRUE)
+
+# Calculate the eigenvalues and eigenvectors of the covariance matrix
+eis <- eigen(sigma)
+eigen_values <- eis$values
+eigen_vectors <- eis$vectors
+
+# Calculate the coefficients or loadings of the second principal component
+l2 <- eigen_vectors[, 2] / sqrt(eigen_values[2])
+
+# Calculate the second principal component
+pc2 <- eigen_values[2] / sum(eigen_values)
+pc2
+```
+
+#### iv. Find the proportion of total variance explained by the first PC. Are two PCs enough. Explain in one sentence.
+
+```{r}
+summary(pc)
+```
+
+The first component alone explains 97% of the total variance. So, 1 component is enough.
